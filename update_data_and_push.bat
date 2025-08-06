@@ -21,7 +21,7 @@ mongoexport ^
 
 :: 5. Git add/commit/push
 cd /d C:\Dev\ProfitOpenSite
-git add %FILENAME%
+git add .
 git commit -m "Auto Updated: %NOW%"
 git push
 
