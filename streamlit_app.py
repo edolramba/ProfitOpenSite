@@ -97,9 +97,9 @@ st.markdown(f"**Total Return**: {total_rate:.2f}%")
 
 st.subheader("📉 Profit Trend Over Time")
 chart = alt.Chart(df).mark_line(point=True).encode(
-    x="buy date:T",
-    y="Total Profit:Q",
-    tooltip=["buy date", "Total Profit"]
+    x="매수일:T",
+    y="누적수익:Q",
+    tooltip=["매수일", "누적수익"]
 ).properties(
     width="container",
     height=400
@@ -107,5 +107,5 @@ chart = alt.Chart(df).mark_line(point=True).encode(
 st.altair_chart(chart, use_container_width=True)
 
 st.subheader("📋 Trade History (Latest First)")
-sorted_df = df.sort_values(by="buy date", ascending=False)
+sorted_df = df.sort_values(by="매수일", ascending=False)
 st.dataframe(sorted_df, use_container_width=True)
