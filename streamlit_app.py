@@ -14,7 +14,7 @@ if not json_candidates:
 
 # 가장 최신 파일 선택
 json_file_path = max(json_candidates, key=os.path.getctime)
-st.info(f"📄 불러온 파일: `{os.path.basename(json_file_path)}`")
+# st.info(f"📄 불러온 파일: `{os.path.basename(json_file_path)}`")
 
 # ✅ JSON 파일 읽기
 with open(json_file_path, "r", encoding="utf-8") as f:
