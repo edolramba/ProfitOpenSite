@@ -97,9 +97,9 @@ st.markdown(f"**Total Return**: {total_rate:.2f}%")
 
 st.subheader("📉 Profit Trend Over Time")
 chart = alt.Chart(df).mark_line(point=True).encode(
-    x="매수일:T",
-    y="누적수익:Q",
-    tooltip=["매수일", "누적수익"]
+    x="buy date:T",
+    y="Total Profit:Q",
+    tooltip=["buy date", "Total Profit"]
 ).properties(
     width="container",
     height=400
