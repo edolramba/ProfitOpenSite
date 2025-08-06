@@ -1,31 +1,29 @@
 @echo off
 SETLOCAL ENABLEDELAYEDEXPANSION
 
-:: 1. 날짜 설정
-for /f %%a in ('powershell -command "Get-Date -Format yyyy-MM-dd_HHmmss"') do set NOW=%%a
+:: 1. 날짜 설정 (연월일_시분초)
+for /f %%a in ('powershell -command "Get-Date -Format yyyyMMdd_HHmmss"') do set NOW=%%a
 
-:: 2. MongoDB에서 export
+:: 2. 파일명 설정
+set FILENAME=%NOW%_automatedTrading.dj00Trading.json
+
+:: 3. 기존 JSON 파일 제거
+echo [INFO] Delete old JSON files...
+del /q C:\Dev\ProfitOpenSite\*_automatedTrading.dj00Trading.json
+
+:: 4. MongoDB export
 echo [INFO] Export JSON FROM MongoDB...
 mongoexport ^
   --db=automatedTrading ^
   --collection=dj00Trading ^
-  --out=C:\Dev\ProfitOpenSite\automatedTrading.dj00Trading.json ^
-  --jsonArray ^
-  --pretty
+  --out=C:\Dev\ProfitOpenSite\%FILENAME% ^
+  --jsonArray
 
-:: 3. Git 작업 디렉토리로 이동
+:: 5. Git add/commit/push
 cd /d C:\Dev\ProfitOpenSite
+git add %FILENAME%
+git commit -m "Auto Updated: %NOW%"
+git push
 
-:: 4. Git 상태 확인
-git add automatedTrading.dj00Trading.json
-git diff --cached --quiet
-
-IF ERRORLEVEL 1 (
-    git commit -m "Auto Updated: !NOW!"
-    git push
-    echo [DONE] JSON export & GitHub Push Complete.
-) ELSE (
-    echo [INFO] No changes detected. Skipping commit and push.
-)
-
+echo [DONE] Exported and pushed: %FILENAME%
 pause

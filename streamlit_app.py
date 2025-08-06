@@ -1,48 +1,50 @@
 import streamlit as st
 import pandas as pd
-from pymongo import MongoClient
-from datetime import datetime
+from datetime import datetime, timezone
 import os
-from dotenv import load_dotenv
+import json
 import altair as alt
+import glob
 
-# .env 불러오기
-load_dotenv()
+# ✅ 최신 JSON 파일 자동 탐색 (파일명 앞에 날짜가 붙는 경우)
+json_candidates = glob.glob("*automatedTrading.dj00Trading.json")
+if not json_candidates:
+    st.error("❌ 자동 저장된 JSON 파일이 없습니다.")
+    st.stop()
 
-MONGO_URI = os.getenv("MONGO_URI")
-MONGO_DB = os.getenv("MONGO_DB")
-MONGO_COLLECTION = os.getenv("MONGO_COLLECTION")
+# 가장 최신 파일 선택
+json_file_path = max(json_candidates, key=os.path.getctime)
+st.info(f"📄 불러온 파일: `{os.path.basename(json_file_path)}`")
 
-client = MongoClient(MONGO_URI)
-db = client[MONGO_DB]
-collection = db[MONGO_COLLECTION]
+# ✅ JSON 파일 읽기
+with open(json_file_path, "r", encoding="utf-8") as f:
+    try:
+        data = json.load(f)
+    except json.JSONDecodeError:
+        st.error("❌ JSON 파일 형식이 잘못되었습니다.")
+        st.stop()
 
-# 매매 완료된 내역 전체 조회
-query = {
-    "buy_chk": "Y",
-    "sell_chk": "Y",
-    "buy_price": {"$ne": None},
-    "sell_price": {"$ne": None},
-    "order_time": {"$gt": datetime(2024, 10, 30)}
-}
-
-data = list(collection.find(query))
-
+# ✅ 데이터 파싱
 rows = []
 for d in data:
     try:
-        buy = d.get("buy_price", 0)
-        sell = d.get("sell_price", 0)
-        qty = d.get("filled_quantity", 0)
+        buy = d.get("buy_price") or 0
+        sell = d.get("sell_price") or 0
+        qty = d.get("filled_quantity") or 0
+        if not (buy and sell and qty):
+            continue
+
         profit = (sell - buy) * qty
         rate = ((sell - buy) / buy) * 100 if buy else 0
-        order_time = d.get("order_time", datetime.min)
+        order_time = d.get("order_time")
 
-        # ISO 포맷 문자열로 들어온 경우 처리
+        # ✅ order_time 처리
         if isinstance(order_time, dict) and "$date" in order_time:
-            order_time = datetime.fromisoformat(order_time["$date"].replace("Z", "+00:00"))
+            order_time = datetime.fromisoformat(order_time["$date"].replace("Z", ""))
         elif isinstance(order_time, str):
-            order_time = datetime.fromisoformat(order_time)
+            order_time = datetime.fromisoformat(order_time.replace("Z", ""))
+        else:
+            continue
 
         rows.append({
             "종목명": d.get("stock_name", ""),
@@ -56,40 +58,39 @@ for d in data:
     except Exception as e:
         print(f"Error parsing document: {e}")
 
+# ✅ 유효한 데이터가 없으면 종료
 if not rows:
     st.error("✅ 매매 완료된 내역이 없습니다.")
     st.stop()
 
 df = pd.DataFrame(rows).sort_values(by="매수일", ascending=True)
 
-# 기준 시작일 명시
+# ✅ 2024-10-30 이후의 데이터만 분석
 start_date = datetime(2024, 10, 30)
+df = df[df["매수일"] > start_date.date()]
 
-# 실제 종료일은 데이터 기준
+# ✅ 유효한 데이터가 없으면 종료
+if df.empty:
+    st.error("✅ 매매 완료된 내역이 없습니다.")
+    st.stop()
+
 end_date = df["매수일"].max()
+duration_days = (end_date - start_date.date()).days + 1
 
-# 투자 기간 (일 수)
-duration_days = (end_date - start_date).days + 1  # 시작일 포함
-
-# 문자열로 포맷팅
-start_str = start_date.strftime("%Y-%m-%d")
-end_str = end_date.strftime("%Y-%m-%d")
-
-# 📊 누적 수익 추이 계산
+# ✅ 누적 수익 계산
 df["누적수익"] = df["수익금(원)"].cumsum()
 
-# 💰 총계 계산
+# ✅ 총계 계산
 total_invest = sum(df["매수가"] * df["수량"])
 average_invest = total_invest / len(df)
-
 total_profit = df["수익금(원)"].sum()
 total_rate = (total_profit / average_invest * 100) if average_invest else 0
 
-# 🖥️ Streamlit UI 출력
+# ✅ UI 출력
 st.title("📈 라오르케봇 수익률 공개")
 
 st.subheader("💰 누적 성과 요약")
-st.markdown(f"**투자 기간**: {start_str} ~ {end_str} ({duration_days}일)")
+st.markdown(f"**투자 기간**: {start_date.date()} ~ {end_date} ({duration_days}일)")
 st.markdown(f"**1회 평균 투자금**: {average_invest:,.0f}원")
 st.markdown(f"**총 수익금**: {total_profit:,.0f}원")
 st.markdown(f"**총 수익률**: {total_rate:.2f}%")
@@ -105,8 +106,6 @@ chart = alt.Chart(df).mark_line(point=True).encode(
 )
 st.altair_chart(chart, use_container_width=True)
 
-sorted_df = df.sort_values(by="매수일", ascending=False)
 st.subheader("📋 매매 내역 (최근 매수일 순)")
+sorted_df = df.sort_values(by="매수일", ascending=False)
 st.dataframe(sorted_df, use_container_width=True)
-
-# 주석으로 감별
