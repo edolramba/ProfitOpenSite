@@ -87,7 +87,7 @@ total_profit = df["수익금(원)"].sum()
 total_rate = (total_profit / average_invest * 100) if average_invest else 0
 
 # ✅ UI 출력
-st.title("📈 111Raorke Bot Performance Report")
+st.title("📈 Raorke Bot Performance Report")
 
 st.subheader("💰 Cumulative Summary")
 st.markdown(f"**Investment Period**: {start_date.date()} ~ {end_date} ({duration_days}일)")
