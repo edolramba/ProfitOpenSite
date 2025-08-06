@@ -97,7 +97,16 @@ st.markdown(f"**Total Return**: {total_rate:.2f}%")
 
 st.subheader("📉 Profit Trend Over Time")
 
-df.rename(columns={"매수일": "Buy Date", "누적수익": "Cumulative Profit"}, inplace=True)
+df.rename(columns={
+    "종목명": "Stock Name",
+    "매수가": "Buy Price",
+    "매도가": "Sell Price",
+    "수익률(%)": "Profit Rate (%)",
+    "수익금(원)": "Profit (KRW)",
+    "수량": "Quantity",
+    "매수일": "Buy Date",
+    "누적수익": "Cumulative Profit"
+}, inplace=True)
 
 chart = alt.Chart(df).mark_line(point=True).encode(
     x="Buy Date:T",
