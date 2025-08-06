@@ -108,3 +108,5 @@ st.altair_chart(chart, use_container_width=True)
 sorted_df = df.sort_values(by="매수일", ascending=False)
 st.subheader("📋 매매 내역 (최근 매수일 순)")
 st.dataframe(sorted_df, use_container_width=True)
+
+# 주석으로 감별
