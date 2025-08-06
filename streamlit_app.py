@@ -87,15 +87,15 @@ total_profit = df["수익금(원)"].sum()
 total_rate = (total_profit / average_invest * 100) if average_invest else 0
 
 # ✅ UI 출력
-st.title("📈 라오르케봇 수익률 공개")
+st.title("📈 Raorke Bot Performance Report")
 
-st.subheader("💰 누적 성과 요약")
-st.markdown(f"**투자 기간**: {start_date.date()} ~ {end_date} ({duration_days}일)")
-st.markdown(f"**1회 평균 투자금**: {average_invest:,.0f}원")
-st.markdown(f"**총 수익금**: {total_profit:,.0f}원")
-st.markdown(f"**총 수익률**: {total_rate:.2f}%")
+st.subheader("💰 Cumulative Summary")
+st.markdown(f"**Investment Period**: {start_date.date()} ~ {end_date} ({duration_days}일)")
+st.markdown(f"**Average Investment per Trade**: {average_invest:,.0f}원")
+st.markdown(f"**Total Profit**: {total_profit:,.0f}원")
+st.markdown(f"**Total Return**: {total_rate:.2f}%")
 
-st.subheader("📉 누적 수익 추이")
+st.subheader("📉 Profit Trend Over Time")
 chart = alt.Chart(df).mark_line(point=True).encode(
     x="매수일:T",
     y="누적수익:Q",
@@ -106,6 +106,6 @@ chart = alt.Chart(df).mark_line(point=True).encode(
 )
 st.altair_chart(chart, use_container_width=True)
 
-st.subheader("📋 매매 내역 (최근 매수일 순)")
+st.subheader("📋 Trade History (Latest First)")
 sorted_df = df.sort_values(by="매수일", ascending=False)
 st.dataframe(sorted_df, use_container_width=True)
