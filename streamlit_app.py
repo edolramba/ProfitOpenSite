@@ -107,5 +107,5 @@ chart = alt.Chart(df).mark_line(point=True).encode(
 st.altair_chart(chart, use_container_width=True)
 
 st.subheader("📋 Trade History (Latest First)")
-sorted_df = df.sort_values(by="매수일", ascending=False)
+sorted_df = df.sort_values(by="buy date", ascending=False)
 st.dataframe(sorted_df, use_container_width=True)
